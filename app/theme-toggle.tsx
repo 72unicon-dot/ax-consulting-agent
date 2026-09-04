@@ -1,8 +1,30 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore, useEffect } from "react";
 
 type Theme = "system" | "light" | "dark";
+
+function readStoredTheme(): Theme {
+  try {
+    const stored = localStorage.getItem("theme");
+    return stored === "dark" || stored === "light" ? stored : "system";
+  } catch {
+    return "system";
+  }
+}
+
+function subscribeToThemeStore(onChange: () => void): () => void {
+  const onStorage = (e: StorageEvent) => {
+    if (e.key === "theme") onChange();
+  };
+  const onCustom = () => onChange();
+  window.addEventListener("storage", onStorage);
+  window.addEventListener("theme:changed", onCustom);
+  return () => {
+    window.removeEventListener("storage", onStorage);
+    window.removeEventListener("theme:changed", onCustom);
+  };
+}
 
 function applyTheme(theme: Theme) {
   const el = document.documentElement;
@@ -12,26 +34,23 @@ function applyTheme(theme: Theme) {
 }
 
 export function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>("system");
-  const [mounted, setMounted] = useState(false);
+  // useSyncExternalStore is the sanctioned hydration-safe way to read
+  // localStorage: the server snapshot ("system") is stable, and after
+  // hydration React switches to the client snapshot without a setState
+  // inside an effect.
+  const theme = useSyncExternalStore<Theme>(
+    subscribeToThemeStore,
+    readStoredTheme,
+    () => "system",
+  );
 
+  // When in system mode, follow OS-level scheme changes.
   useEffect(() => {
-    setMounted(true);
-    const stored = localStorage.getItem("theme");
-    if (stored === "dark" || stored === "light") {
-      setTheme(stored);
-    } else {
-      setTheme("system");
-    }
-  }, []);
-
-  useEffect(() => {
-    if (theme === "system") {
-      const mq = window.matchMedia("(prefers-color-scheme: dark)");
-      const onChange = () => applyTheme("system");
-      mq.addEventListener("change", onChange);
-      return () => mq.removeEventListener("change", onChange);
-    }
+    if (theme !== "system") return;
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const onChange = () => applyTheme("system");
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
   }, [theme]);
 
   function cycle() {
@@ -42,13 +61,13 @@ export function ThemeToggle() {
     } else {
       localStorage.setItem("theme", next);
     }
-    setTheme(next);
     applyTheme(next);
+    // Same-tab writes don't fire the "storage" event, so nudge our subscriber.
+    window.dispatchEvent(new Event("theme:changed"));
   }
 
-  const label = !mounted
-    ? "테마"
-    : theme === "system"
+  const label =
+    theme === "system"
       ? "🖥️ 시스템"
       : theme === "light"
         ? "☀️ 라이트"

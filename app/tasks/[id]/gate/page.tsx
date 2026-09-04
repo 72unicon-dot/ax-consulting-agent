@@ -119,8 +119,8 @@ export default async function GatePage({ params }: PageProps<"/tasks/[id]/gate">
           <section className="mt-8 rounded-2xl border border-amber-200 bg-amber-50 p-6 dark:border-amber-900 dark:bg-amber-950">
             <p className="text-sm text-amber-900 dark:text-amber-200">
               PBL 5단계 산출물이 모두 필요합니다. 현재 완료:{" "}
-              {stagesDone.size}/5. 산출물이 없는 stage에서 "완료 & 다음으로"
-              버튼으로 정리를 마쳐 주세요.
+              {stagesDone.size}/5. 산출물이 없는 stage에서 &ldquo;완료 &amp;
+              다음으로&rdquo; 버튼으로 정리를 마쳐 주세요.
             </p>
           </section>
         ) : !gate ? (
