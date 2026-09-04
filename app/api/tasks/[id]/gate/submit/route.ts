@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import type { ChecklistItem } from "@/lib/gates/generate";
+import { notifyCompanyRoles } from "@/lib/notifications/create";
 
 export const dynamic = "force-dynamic";
 
@@ -61,6 +62,23 @@ export async function POST(
     .eq("id", gate.id);
   if (updErr) {
     return NextResponse.json({ error: updErr.message }, { status: 500 });
+  }
+
+  const { data: task } = await supabase
+    .from("tasks")
+    .select("company_id, title")
+    .eq("id", taskId)
+    .maybeSingle();
+  if (task?.company_id) {
+    await notifyCompanyRoles(
+      task.company_id,
+      ["super_admin", "company_admin"],
+      {
+        type: "gate_submitted",
+        task_id: taskId,
+        message: `[${task.title}] Gate ${GATE_NUMBER} 승인 요청이 도착했습니다.`,
+      },
+    );
   }
 
   return NextResponse.json({ ok: true });

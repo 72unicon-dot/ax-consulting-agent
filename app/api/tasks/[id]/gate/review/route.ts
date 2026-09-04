@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createNotifications } from "@/lib/notifications/create";
 
 export const dynamic = "force-dynamic";
 
@@ -47,7 +48,7 @@ export async function POST(
 
   const { data: gate, error: gateErr } = await supabase
     .from("gates")
-    .select("id, status")
+    .select("id, status, requested_by")
     .eq("task_id", taskId)
     .eq("gate_number", GATE_NUMBER)
     .maybeSingle();
@@ -83,6 +84,25 @@ export async function POST(
       .from("tasks")
       .update({ current_status: "development_ready" })
       .eq("id", taskId);
+  }
+
+  if (gate.requested_by) {
+    const { data: task } = await supabase
+      .from("tasks")
+      .select("title")
+      .eq("id", taskId)
+      .maybeSingle();
+    await createNotifications([
+      {
+        user_id: gate.requested_by,
+        type: nextStatus === "approved" ? "gate_approved" : "gate_rejected",
+        task_id: taskId,
+        message:
+          nextStatus === "approved"
+            ? `[${task?.title ?? "과제"}] Gate ${GATE_NUMBER}가 승인되었습니다.`
+            : `[${task?.title ?? "과제"}] Gate ${GATE_NUMBER}가 반려되었습니다.${body.comment ? " 코멘트: " + body.comment.trim() : ""}`,
+      },
+    ]);
   }
 
   return NextResponse.json({ ok: true, status: nextStatus });

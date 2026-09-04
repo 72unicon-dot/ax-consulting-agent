@@ -37,6 +37,12 @@ export default async function DashboardPage() {
         .limit(10)
     : { data: [] };
 
+  const { count: unreadCount } = await supabase
+    .from("notifications")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .eq("is_read", false);
+
   return (
     <main className="flex flex-1 flex-col px-6 py-16">
       <div className="mx-auto w-full max-w-5xl">
@@ -54,6 +60,18 @@ export default async function DashboardPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <Link
+              href="/notifications"
+              className="relative inline-flex h-9 items-center justify-center rounded-md border border-zinc-300 px-3 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
+              aria-label="알림"
+            >
+              알림
+              {unreadCount && unreadCount > 0 ? (
+                <span className="ml-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-600 px-1.5 text-[10px] font-bold text-white">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              ) : null}
+            </Link>
             {(profile?.role === "super_admin" ||
               profile?.role === "company_admin") && (
               <Link
