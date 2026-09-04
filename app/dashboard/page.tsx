@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { ThemeToggle } from "../theme-toggle";
 
 export const dynamic = "force-dynamic";
 
@@ -85,6 +86,7 @@ export default async function DashboardPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             <Link
               href="/notifications"
               className="relative inline-flex h-9 items-center justify-center rounded-md border border-zinc-300 px-3 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"

@@ -115,30 +115,65 @@ export default async function TaskDetailPage({
           <div className="mt-4 overflow-hidden rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
             {files && files.length > 0 ? (
               <ul className="divide-y divide-zinc-200 dark:divide-zinc-800">
-                {files.map((f) => (
-                  <li
-                    key={f.id}
-                    className="flex items-center justify-between gap-3 px-5 py-3"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <a
-                        href={`/api/task-files/${f.id}/download`}
-                        className="text-sm font-medium text-zinc-900 hover:underline dark:text-zinc-50"
-                      >
-                        {f.file_name}
-                      </a>
-                      <p className="mt-0.5 text-xs text-zinc-500">
-                        {f.file_size
-                          ? `${(f.file_size / 1024).toFixed(1)} KB`
-                          : "—"}
-                        {f.file_type ? ` · ${f.file_type}` : ""}
-                        {" · "}
-                        {new Date(f.uploaded_at).toLocaleString("ko-KR")}
-                      </p>
-                    </div>
-                    <DeleteFileButton fileId={f.id} />
-                  </li>
-                ))}
+                {files.map((f) => {
+                  const isImage = f.file_type?.startsWith("image/");
+                  const isPdf = f.file_type === "application/pdf";
+                  return (
+                    <li key={f.id} className="flex flex-col gap-3 px-5 py-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <a
+                            href={`/api/task-files/${f.id}/download`}
+                            className="text-sm font-medium text-zinc-900 hover:underline dark:text-zinc-50"
+                          >
+                            {f.file_name}
+                          </a>
+                          <p className="mt-0.5 text-xs text-zinc-500">
+                            {f.file_size
+                              ? `${(f.file_size / 1024).toFixed(1)} KB`
+                              : "—"}
+                            {f.file_type ? ` · ${f.file_type}` : ""}
+                            {" · "}
+                            {new Date(f.uploaded_at).toLocaleString("ko-KR")}
+                          </p>
+                        </div>
+                        <DeleteFileButton fileId={f.id} />
+                      </div>
+                      {isImage && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={`/api/task-files/${f.id}/view`}
+                          alt={f.file_name}
+                          className="max-h-64 w-auto self-start rounded-md border border-zinc-200 object-contain dark:border-zinc-800"
+                          loading="lazy"
+                        />
+                      )}
+                      {isPdf && (
+                        <details className="rounded-md border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900">
+                          <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                            PDF 미리보기
+                          </summary>
+                          <object
+                            data={`/api/task-files/${f.id}/view`}
+                            type="application/pdf"
+                            className="h-96 w-full"
+                          >
+                            <p className="p-3 text-xs text-zinc-500">
+                              브라우저에서 이 PDF를 표시할 수 없습니다.{" "}
+                              <a
+                                href={`/api/task-files/${f.id}/download`}
+                                className="underline"
+                              >
+                                다운로드
+                              </a>
+                              하여 확인하세요.
+                            </p>
+                          </object>
+                        </details>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             ) : (
               <div className="px-5 py-8 text-center text-sm text-zinc-500">
