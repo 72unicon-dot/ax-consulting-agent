@@ -14,4 +14,4 @@ export function getAnthropicClient() {
   return client;
 }
 
-export const DEFAULT_MODEL = "claude-opus-4-7";
+export const DEFAULT_MODEL = "claude-opus-5";
