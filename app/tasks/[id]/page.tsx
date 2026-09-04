@@ -205,29 +205,42 @@ export default async function TaskDetailPage({
               </ol>
 
               {allStagesDone && (
-                <div className="mt-6 rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-                        게이트 검토 · Gate 5
-                      </h3>
-                      <p className="mt-0.5 text-xs text-zinc-500">
-                        {gate?.status === "approved"
-                          ? "승인됨 — 개발 착수 준비 완료"
-                          : gate?.status === "rejected"
-                            ? "반려됨 — 체크리스트 재생성 필요"
-                            : gate?.status === "requested"
-                              ? "관리자 검토 대기 중"
-                              : gate?.status === "checklist_ready"
-                                ? "체크리스트 준비됨"
-                                : "체크리스트 자동 생성 가능"}
-                      </p>
-                    </div>
+                <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
+                    <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                      게이트 검토 · Gate 5
+                    </h3>
+                    <p className="mt-0.5 text-xs text-zinc-500">
+                      {gate?.status === "approved"
+                        ? "승인됨 — 개발 착수 준비 완료"
+                        : gate?.status === "rejected"
+                          ? "반려됨 — 체크리스트 재생성 필요"
+                          : gate?.status === "requested"
+                            ? "관리자 검토 대기 중"
+                            : gate?.status === "checklist_ready"
+                              ? "체크리스트 준비됨"
+                              : "체크리스트 자동 생성 가능"}
+                    </p>
                     <Link
                       href={`/tasks/${task.id}/gate`}
-                      className="inline-flex h-9 items-center justify-center rounded-md bg-zinc-900 px-3 text-sm font-medium text-zinc-50 hover:bg-zinc-700 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                      className="mt-3 inline-flex h-9 items-center justify-center rounded-md bg-zinc-900 px-3 text-sm font-medium text-zinc-50 hover:bg-zinc-700 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
                     >
                       게이트 열기 →
+                    </Link>
+                  </div>
+
+                  <div className="rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
+                    <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                      최종 보고서
+                    </h3>
+                    <p className="mt-0.5 text-xs text-zinc-500">
+                      5개 산출물 + 평가 + 게이트 결과를 통합한 임원 보고서
+                    </p>
+                    <Link
+                      href={`/tasks/${task.id}/reports`}
+                      className="mt-3 inline-flex h-9 items-center justify-center rounded-md border border-zinc-300 px-3 text-sm font-medium text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
+                    >
+                      보고서 열기 →
                     </Link>
                   </div>
                 </div>
