@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { STAGE_META, type StageNumber } from "@/lib/pbl/stage-prompts";
 import { EvaluateButton } from "./evaluate-button";
 
 export const dynamic = "force-dynamic";
@@ -26,13 +27,31 @@ export default async function TaskDetailPage({
 
   if (!task) notFound();
 
-  const { data: evaluation } = await supabase
-    .from("ax_evaluations")
-    .select("*")
-    .eq("task_id", id)
-    .order("evaluated_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const [{ data: evaluation }, { data: stagesRows }, { data: outputsRows }] =
+    await Promise.all([
+      supabase
+        .from("ax_evaluations")
+        .select("*")
+        .eq("task_id", id)
+        .order("evaluated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("pbl_stages")
+        .select("stage_number, status, started_at, completed_at")
+        .eq("task_id", id),
+      supabase
+        .from("pbl_outputs")
+        .select("stage_number, content, version, updated_at")
+        .eq("task_id", id),
+    ]);
+
+  const stageMap = new Map(
+    (stagesRows ?? []).map((r) => [r.stage_number as StageNumber, r]),
+  );
+  const outputMap = new Map(
+    (outputsRows ?? []).map((r) => [r.stage_number as StageNumber, r]),
+  );
 
   return (
     <main className="flex flex-1 flex-col px-6 py-16">
@@ -115,18 +134,64 @@ export default async function TaskDetailPage({
         {evaluation &&
           (task.ax_path === "rule" || task.ax_path === "ai") && (
             <section className="mt-10">
-              <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-                PBL 진행
-              </h2>
-              <p className="mt-1 text-sm text-zinc-500">
-                진단 인터뷰부터 실행 로드맵까지 5단계로 함께 진행합니다.
-              </p>
-              <Link
-                href={`/tasks/${task.id}/pbl/1`}
-                className="mt-4 inline-flex h-10 items-center justify-center rounded-md bg-emerald-600 px-4 text-sm font-medium text-white hover:bg-emerald-700"
-              >
-                Stage 1 · 문제 정의 시작 →
-              </Link>
+              <div className="flex items-baseline justify-between">
+                <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+                  PBL 진행
+                </h2>
+                <p className="text-xs text-zinc-500">
+                  진단 인터뷰부터 실행 로드맵까지 5단계
+                </p>
+              </div>
+              <ol className="mt-4 flex flex-col gap-2">
+                {([1, 2, 3, 4, 5] as StageNumber[]).map((s) => {
+                  const stageRow = stageMap.get(s);
+                  const outputRow = outputMap.get(s);
+                  const meta = STAGE_META[s];
+                  const status = stageRow?.status ?? "not_started";
+                  return (
+                    <li key={s}>
+                      <Link
+                        href={`/tasks/${task.id}/pbl/${s}`}
+                        className="flex items-start justify-between gap-4 rounded-xl border border-zinc-200 bg-white px-4 py-3 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:bg-zinc-900"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-semibold ${
+                                status === "completed"
+                                  ? "bg-emerald-500 text-white"
+                                  : status === "in_progress"
+                                    ? "bg-zinc-900 text-white dark:bg-zinc-50 dark:text-zinc-900"
+                                    : "bg-zinc-200 text-zinc-500 dark:bg-zinc-800"
+                              }`}
+                            >
+                              {status === "completed" ? "✓" : s}
+                            </span>
+                            <span className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
+                              {meta.title}
+                            </span>
+                            {outputRow && (
+                              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                                v{outputRow.version}
+                              </span>
+                            )}
+                          </div>
+                          {outputRow ? (
+                            <p className="mt-1 line-clamp-2 text-xs text-zinc-500">
+                              {(outputRow.content ?? "").replace(/^#.*\n\n?/, "")}
+                            </p>
+                          ) : (
+                            <p className="mt-1 text-xs text-zinc-400">
+                              {meta.subtitle}
+                            </p>
+                          )}
+                        </div>
+                        <span className="shrink-0 text-xs text-zinc-400">→</span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ol>
             </section>
           )}
 
