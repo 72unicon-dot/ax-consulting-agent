@@ -53,6 +53,17 @@ export default async function TaskDetailPage({
     (outputsRows ?? []).map((r) => [r.stage_number as StageNumber, r]),
   );
 
+  const { data: gate } = await supabase
+    .from("gates")
+    .select("gate_number, status, reviewed_at")
+    .eq("task_id", id)
+    .eq("gate_number", 5)
+    .maybeSingle();
+
+  const allStagesDone = [1, 2, 3, 4, 5].every((n) =>
+    outputMap.has(n as StageNumber),
+  );
+
   return (
     <main className="flex flex-1 flex-col px-6 py-16">
       <div className="mx-auto w-full max-w-3xl">
@@ -192,6 +203,35 @@ export default async function TaskDetailPage({
                   );
                 })}
               </ol>
+
+              {allStagesDone && (
+                <div className="mt-6 rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                        게이트 검토 · Gate 5
+                      </h3>
+                      <p className="mt-0.5 text-xs text-zinc-500">
+                        {gate?.status === "approved"
+                          ? "승인됨 — 개발 착수 준비 완료"
+                          : gate?.status === "rejected"
+                            ? "반려됨 — 체크리스트 재생성 필요"
+                            : gate?.status === "requested"
+                              ? "관리자 검토 대기 중"
+                              : gate?.status === "checklist_ready"
+                                ? "체크리스트 준비됨"
+                                : "체크리스트 자동 생성 가능"}
+                      </p>
+                    </div>
+                    <Link
+                      href={`/tasks/${task.id}/gate`}
+                      className="inline-flex h-9 items-center justify-center rounded-md bg-zinc-900 px-3 text-sm font-medium text-zinc-50 hover:bg-zinc-700 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                    >
+                      게이트 열기 →
+                    </Link>
+                  </div>
+                </div>
+              )}
             </section>
           )}
 
