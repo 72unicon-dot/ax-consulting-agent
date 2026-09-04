@@ -99,11 +99,27 @@ export default async function DashboardPage() {
             </Link>
             {(profile?.role === "super_admin" ||
               profile?.role === "company_admin") && (
+              <>
+                <Link
+                  href="/admin/invitations"
+                  className="inline-flex h-9 items-center justify-center rounded-md border border-zinc-300 px-3 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
+                >
+                  초대
+                </Link>
+                <Link
+                  href="/admin/users"
+                  className="inline-flex h-9 items-center justify-center rounded-md border border-zinc-300 px-3 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
+                >
+                  사용자
+                </Link>
+              </>
+            )}
+            {profile?.role === "super_admin" && (
               <Link
-                href="/admin/invitations"
+                href="/admin/companies"
                 className="inline-flex h-9 items-center justify-center rounded-md border border-zinc-300 px-3 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
               >
-                초대 관리
+                회사
               </Link>
             )}
             <Link
