@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { STAGE_META, type StageNumber } from "@/lib/pbl/stage-prompts";
 import { loadHistory } from "@/lib/pbl/session";
 import { finalizeStage } from "@/lib/pbl/finalize";
+import { notifyCompanyRoles } from "@/lib/notifications/create";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
@@ -29,7 +30,7 @@ export async function POST(
 
   const { data: task, error: taskErr } = await supabase
     .from("tasks")
-    .select("id, current_status")
+    .select("id, current_status, title, company_id")
     .eq("id", taskId)
     .maybeSingle();
   if (taskErr) {
@@ -116,6 +117,18 @@ export async function POST(
     .from("tasks")
     .update({ current_status: nextStatus })
     .eq("id", taskId);
+
+  if (nextStatus === "gate_pending" && task.company_id) {
+    await notifyCompanyRoles(
+      task.company_id,
+      ["super_admin", "company_admin"],
+      {
+        type: "gate_submitted",
+        task_id: taskId,
+        message: `[${task.title}] Stage 5까지 완료되었습니다. Gate 체크리스트 생성을 진행하세요.`,
+      },
+    );
+  }
 
   return NextResponse.json({
     ok: true,

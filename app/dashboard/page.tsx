@@ -43,6 +43,31 @@ export default async function DashboardPage() {
     .eq("user_id", user.id)
     .eq("is_read", false);
 
+  const { data: statusRows } = profile?.company_id
+    ? await supabase
+        .from("tasks")
+        .select("current_status")
+        .eq("company_id", profile.company_id)
+    : { data: [] as { current_status: string }[] };
+
+  const statusCounts = { total: 0, active: 0, gate: 0, done: 0 };
+  const IN_PROGRESS = new Set([
+    "registered",
+    "evaluating",
+    "pbl_1",
+    "pbl_2",
+    "pbl_3",
+    "pbl_4",
+    "pbl_5",
+  ]);
+  for (const t of statusRows ?? []) {
+    statusCounts.total++;
+    if (IN_PROGRESS.has(t.current_status)) statusCounts.active++;
+    if (t.current_status === "gate_pending") statusCounts.gate++;
+    if (t.current_status === "development_ready" || t.current_status === "completed")
+      statusCounts.done++;
+  }
+
   return (
     <main className="flex flex-1 flex-col px-6 py-16">
       <div className="mx-auto w-full max-w-5xl">
@@ -98,6 +123,15 @@ export default async function DashboardPage() {
           </div>
         </header>
 
+        {profile?.company_id && (
+          <section className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <StatCard label="전체 과제" value={statusCounts.total} tone="slate" />
+            <StatCard label="진행 중" value={statusCounts.active} tone="sky" />
+            <StatCard label="게이트 대기" value={statusCounts.gate} tone="amber" />
+            <StatCard label="완료" value={statusCounts.done} tone="emerald" />
+          </section>
+        )}
+
         <section className="mt-10">
           <div className="flex items-baseline justify-between">
             <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
@@ -148,9 +182,36 @@ export default async function DashboardPage() {
         </section>
 
         <footer className="mt-16 text-xs text-zinc-500">
-          Phase 2 · 인증 & 대시보드 스켈레톤
+          AX Consulting Agent · dashboard
         </footer>
       </div>
     </main>
+  );
+}
+
+function StatCard({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number;
+  tone: "slate" | "sky" | "amber" | "emerald";
+}) {
+  const cls = {
+    slate: "text-slate-800 dark:text-slate-200",
+    sky: "text-sky-700 dark:text-sky-400",
+    amber: "text-amber-700 dark:text-amber-400",
+    emerald: "text-emerald-700 dark:text-emerald-400",
+  }[tone];
+  return (
+    <div className="rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
+      <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+        {label}
+      </p>
+      <p className={`mt-2 font-mono text-3xl font-semibold ${cls}`}>
+        {value}
+      </p>
+    </div>
   );
 }

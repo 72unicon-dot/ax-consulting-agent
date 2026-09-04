@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { generateFinalReport } from "@/lib/reports/generate";
+import { notifyCompanyRoles } from "@/lib/notifications/create";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
@@ -99,6 +100,16 @@ export async function POST(
       { status: 500 },
     );
   }
+
+  await notifyCompanyRoles(
+    task.company_id,
+    ["super_admin", "company_admin"],
+    {
+      type: "report_ready",
+      task_id: taskId,
+      message: `[${task.title}] 최종 보고서가 생성되었습니다.`,
+    },
+  );
 
   return NextResponse.json({ ok: true, report_id: inserted.id });
 }
