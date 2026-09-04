@@ -60,6 +60,11 @@ export default async function TaskDetailPage({
     .eq("gate_number", 5)
     .maybeSingle();
 
+  const { count: kpiCount } = await supabase
+    .from("kpi_records")
+    .select("id", { count: "exact", head: true })
+    .eq("task_id", id);
+
   const allStagesDone = [1, 2, 3, 4, 5].every((n) =>
     outputMap.has(n as StageNumber),
   );
@@ -241,6 +246,29 @@ export default async function TaskDetailPage({
                       className="mt-3 inline-flex h-9 items-center justify-center rounded-md border border-zinc-300 px-3 text-sm font-medium text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
                     >
                       보고서 열기 →
+                    </Link>
+                  </div>
+                </div>
+              )}
+
+              {evaluation && (
+                <div className="mt-3 rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                        KPI 트래킹
+                      </h3>
+                      <p className="mt-0.5 text-xs text-zinc-500">
+                        {kpiCount && kpiCount > 0
+                          ? `${kpiCount}개 KPI · baseline → target 진척 추적`
+                          : "PBL 산출물에서 KPI 자동 추출 또는 직접 등록"}
+                      </p>
+                    </div>
+                    <Link
+                      href={`/tasks/${task.id}/kpis`}
+                      className="inline-flex h-9 items-center justify-center rounded-md border border-zinc-300 px-3 text-sm font-medium text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
+                    >
+                      KPI 열기 →
                     </Link>
                   </div>
                 </div>
