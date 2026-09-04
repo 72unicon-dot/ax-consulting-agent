@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 const features = [
   {
@@ -15,7 +16,18 @@ const features = [
   },
 ];
 
-export default function Home() {
+export default async function Home({ searchParams }: PageProps<"/">) {
+  const params = await searchParams;
+  // Supabase auth-code fallback: when Site URL routes here instead of /auth/callback
+  // (misconfigured Redirect URLs), forward the code so the session still exchanges.
+  const code = typeof params.code === "string" ? params.code : null;
+  if (code) {
+    const next = typeof params.next === "string" ? params.next : "/dashboard";
+    redirect(
+      `/auth/callback?code=${encodeURIComponent(code)}&next=${encodeURIComponent(next)}`,
+    );
+  }
+
   return (
     <main className="flex flex-1 flex-col items-center px-6 py-24">
       <div className="w-full max-w-4xl">
