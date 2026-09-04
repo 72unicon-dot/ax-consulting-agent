@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { STAGE_META, type StageNumber } from "@/lib/pbl/stage-prompts";
 import { EvaluateButton } from "./evaluate-button";
+import { FileUploadButton, DeleteFileButton } from "./file-controls";
 
 export const dynamic = "force-dynamic";
 
@@ -65,6 +66,12 @@ export default async function TaskDetailPage({
     .select("id", { count: "exact", head: true })
     .eq("task_id", id);
 
+  const { data: files } = await supabase
+    .from("task_files")
+    .select("id, file_name, file_size, file_type, uploaded_at")
+    .eq("task_id", id)
+    .order("uploaded_at", { ascending: false });
+
   const allStagesDone = [1, 2, 3, 4, 5].every((n) =>
     outputMap.has(n as StageNumber),
   );
@@ -96,6 +103,50 @@ export default async function TaskDetailPage({
           <Info label="설명" value={task.description} />
           <Info label="배경" value={task.background} />
           <Info label="기대 효과" value={task.expected_effect} />
+        </section>
+
+        <section className="mt-10">
+          <div className="flex items-baseline justify-between">
+            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+              첨부 파일
+            </h2>
+            <FileUploadButton taskId={id} />
+          </div>
+          <div className="mt-4 overflow-hidden rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
+            {files && files.length > 0 ? (
+              <ul className="divide-y divide-zinc-200 dark:divide-zinc-800">
+                {files.map((f) => (
+                  <li
+                    key={f.id}
+                    className="flex items-center justify-between gap-3 px-5 py-3"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <a
+                        href={`/api/task-files/${f.id}/download`}
+                        className="text-sm font-medium text-zinc-900 hover:underline dark:text-zinc-50"
+                      >
+                        {f.file_name}
+                      </a>
+                      <p className="mt-0.5 text-xs text-zinc-500">
+                        {f.file_size
+                          ? `${(f.file_size / 1024).toFixed(1)} KB`
+                          : "—"}
+                        {f.file_type ? ` · ${f.file_type}` : ""}
+                        {" · "}
+                        {new Date(f.uploaded_at).toLocaleString("ko-KR")}
+                      </p>
+                    </div>
+                    <DeleteFileButton fileId={f.id} />
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="px-5 py-8 text-center text-sm text-zinc-500">
+                아직 첨부된 파일이 없습니다. 인터뷰 근거 자료·현장 자료 등을
+                업로드하세요. (최대 25MB)
+              </div>
+            )}
+          </div>
         </section>
 
         <section className="mt-10">
