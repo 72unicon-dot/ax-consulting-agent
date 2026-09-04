@@ -7,6 +7,7 @@ import {
   MeasurementInput,
   DeleteKpiButton,
 } from "./client";
+import { computeProgress } from "@/lib/kpi/progress";
 
 export const dynamic = "force-dynamic";
 
@@ -35,17 +36,6 @@ const CATEGORY_META: Record<
     cls: "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300",
   },
 };
-
-function computeProgress(
-  baseline: number | null,
-  current: number | null,
-  target: number | null,
-): number | null {
-  if (baseline == null || current == null || target == null) return null;
-  if (baseline === target) return current === target ? 100 : 0;
-  const raw = ((current - baseline) / (target - baseline)) * 100;
-  return Math.max(0, Math.min(100, raw));
-}
 
 export default async function KpiPage({ params }: PageProps<"/tasks/[id]/kpis">) {
   const { id } = await params;

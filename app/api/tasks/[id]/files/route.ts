@@ -1,19 +1,13 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { randomUUID } from "node:crypto";
+import { safeFilename } from "@/lib/files/safe-filename";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 const BUCKET = "task_files";
 const MAX_BYTES = 25 * 1024 * 1024;
-
-function safeFilename(name: string): string {
-  const trimmed = name.replace(/[/\\]/g, "_").trim();
-  const collapsed = trimmed.replace(/\s+/g, "_");
-  const kept = collapsed.replace(/[^\p{L}\p{N}._-]/gu, "");
-  return kept.slice(0, 80) || "file";
-}
 
 export async function POST(
   request: NextRequest,
