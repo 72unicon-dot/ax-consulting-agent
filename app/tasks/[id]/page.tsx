@@ -112,6 +112,24 @@ export default async function TaskDetailPage({
           </div>
         </section>
 
+        {evaluation &&
+          (task.ax_path === "rule" || task.ax_path === "ai") && (
+            <section className="mt-10">
+              <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+                PBL 진행
+              </h2>
+              <p className="mt-1 text-sm text-zinc-500">
+                진단 인터뷰부터 실행 로드맵까지 5단계로 함께 진행합니다.
+              </p>
+              <Link
+                href={`/tasks/${task.id}/pbl/1`}
+                className="mt-4 inline-flex h-10 items-center justify-center rounded-md bg-emerald-600 px-4 text-sm font-medium text-white hover:bg-emerald-700"
+              >
+                Stage 1 · 문제 정의 시작 →
+              </Link>
+            </section>
+          )}
+
         <footer className="mt-12 text-xs text-zinc-400">
           등록: {new Date(task.created_at).toLocaleString("ko-KR")} · 수정:{" "}
           {new Date(task.updated_at).toLocaleString("ko-KR")}
