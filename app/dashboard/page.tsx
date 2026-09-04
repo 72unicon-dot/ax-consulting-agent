@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { ensureProfile } from "@/lib/auth/provision";
 import { ThemeToggle } from "../theme-toggle";
 
 export const dynamic = "force-dynamic";
@@ -14,6 +15,10 @@ export default async function DashboardPage() {
   if (!user) {
     redirect("/login?next=/dashboard");
   }
+
+  // Trigger on-demand provisioning so users who logged in via OTP (which
+  // bypasses /auth/callback) still get a profile row + company assignment.
+  await ensureProfile(user);
 
   const { data: profile } = await supabase
     .from("users")

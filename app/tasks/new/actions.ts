@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { ensureProfile } from "@/lib/auth/provision";
 
 export async function createTaskAction(formData: FormData) {
   const title = String(formData.get("title") ?? "").trim();
@@ -19,6 +20,9 @@ export async function createTaskAction(formData: FormData) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/tasks/new");
+
+  // Belt-and-suspenders: ensure profile exists before we read company_id.
+  await ensureProfile(user);
 
   const { data: profile } = await supabase
     .from("users")

@@ -28,7 +28,10 @@ export async function GET(request: NextRequest) {
   if (user) {
     const result = await provisionProfileIfNeeded(user);
     if (!result.ok) {
-      await supabase.auth.signOut();
+      // Provisioning is now permissive (falls back to sandbox+member), so
+      // a real failure here means a DB/RLS problem, not a policy denial.
+      // Surface the error but do not sign the user out — they can retry
+      // from /dashboard where provisioning also runs on demand.
       return NextResponse.redirect(
         `${origin}/login?error=${encodeURIComponent(result.reason)}`,
       );

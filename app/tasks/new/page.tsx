@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { ensureProfile } from "@/lib/auth/provision";
 import { createTaskAction } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -16,6 +17,9 @@ export default async function NewTaskPage({
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/tasks/new");
+
+  // Provision on demand — any signed-in user should be able to reach here.
+  await ensureProfile(user);
 
   const { data: profile } = await supabase
     .from("users")
