@@ -44,7 +44,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
           </p>
           <div className="mt-4 flex flex-col gap-3 sm:flex-row">
             <Link
-              href="/health"
+              href="/status"
               className="inline-flex h-11 items-center justify-center rounded-full bg-zinc-900 px-6 text-sm font-medium text-zinc-50 transition-colors hover:bg-zinc-700 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
             >
               시스템 상태 확인
